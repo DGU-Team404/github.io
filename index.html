@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RoomLog — LiDAR 기반 주거 공간 기록 · 하자 분쟁 해결 플랫폼</title>
   <meta name="description" content="iPhone LiDAR로 방을 3D 스캔하고, AI가 하자를 탐지·비교·견적까지 처리하는 주거 분쟁 해결 플랫폼" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #3D6B8F;
@@ -16,16 +19,20 @@
       --text-muted: #607080;
       --border: #DDE4EC;
       --accent: #4A9B7F;
+      --accent-amber: #F59E0B;
+      --accent-red: #E05A5A;
       --radius: 16px;
-      --shadow: 0 4px 24px rgba(61,107,143,0.10);
+      --shadow: 0 2px 12px rgba(61,107,143,0.08);
+      --shadow-md: 0 4px 24px rgba(61,107,143,0.12);
       --shadow-lg: 0 12px 48px rgba(61,107,143,0.18);
+      --shadow-xl: 0 24px 64px rgba(0,0,0,0.18);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.65;
@@ -35,256 +42,585 @@
     /* ── NAV ── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid rgba(221,228,236,0.6);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 40px; height: 60px;
+      padding: 0 48px; height: 64px;
+      transition: box-shadow 0.3s;
     }
+    nav.scrolled { box-shadow: 0 4px 24px rgba(61,107,143,0.10); }
     .nav-logo {
       display: flex; align-items: center; gap: 10px;
-      text-decoration: none; font-size: 1.15rem; font-weight: 700; color: var(--primary);
+      text-decoration: none; font-size: 1.15rem; font-weight: 800; color: var(--primary);
     }
-    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
     .nav-links a {
-      text-decoration: none; font-size: 0.875rem; font-weight: 500;
+      text-decoration: none; font-size: 0.875rem; font-weight: 600;
       color: var(--text-muted); transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--primary); }
     .nav-github {
-      display: flex; align-items: center; gap: 7px;
-      padding: 7px 16px; background: var(--primary); color: #fff !important;
-      border-radius: 8px; font-size: 0.85rem !important; font-weight: 600 !important;
-      transition: background 0.2s !important;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 18px; background: var(--primary); color: #fff !important;
+      border-radius: 10px; font-size: 0.85rem !important; font-weight: 700 !important;
+      transition: background 0.2s, transform 0.15s !important;
+      box-shadow: 0 2px 8px rgba(61,107,143,0.25);
     }
-    .nav-github:hover { background: var(--primary-dark) !important; }
+    .nav-github:hover { background: var(--primary-dark) !important; transform: translateY(-1px) !important; }
 
     /* ── HERO ── */
     .hero {
       min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      text-align: center; padding: 120px 24px 80px;
-      background: linear-gradient(160deg, #EEF4FA 0%, #F4F7FA 50%, #EAF2EC 100%);
+      text-align: center; padding: 120px 24px 100px;
+      background: linear-gradient(145deg, #0d1b2a 0%, #1a2d42 45%, #0f2035 100%);
       position: relative; overflow: hidden;
     }
-    .hero::before {
-      content: ''; position: absolute; top: -120px; right: -120px;
-      width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(61,107,143,0.08) 0%, transparent 70%);
+
+    /* animated orb layers */
+    .hero::before, .hero::after {
+      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
     }
+    .hero::before {
+      width: 700px; height: 700px;
+      top: -200px; right: -200px;
+      background: radial-gradient(circle, rgba(91,141,184,0.15) 0%, transparent 65%);
+      animation: orb-drift 12s ease-in-out infinite alternate;
+    }
+    .hero::after {
+      width: 500px; height: 500px;
+      bottom: -150px; left: -150px;
+      background: radial-gradient(circle, rgba(74,155,127,0.12) 0%, transparent 65%);
+      animation: orb-drift 16s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes orb-drift {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* hero grid background */
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(91,141,184,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,141,184,0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent);
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent);
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 16px; background: rgba(61,107,143,0.10); color: var(--primary);
-      border-radius: 100px; font-size: 0.8rem; font-weight: 600;
-      letter-spacing: 0.04em; margin-bottom: 24px;
-      border: 1px solid rgba(61,107,143,0.18);
+      padding: 7px 18px;
+      background: rgba(91,141,184,0.15);
+      color: #93C5FD;
+      border-radius: 100px; font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.06em; margin-bottom: 28px;
+      border: 1px solid rgba(91,141,184,0.25);
+      backdrop-filter: blur(8px);
     }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #4ADE80;
+      box-shadow: 0 0 8px rgba(74,222,128,0.6);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(74,222,128,0.6); }
+      50% { opacity: 0.7; box-shadow: 0 0 16px rgba(74,222,128,0.9); }
+    }
+
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 800;
-      line-height: 1.2; color: var(--text); margin-bottom: 20px; letter-spacing: -0.02em;
+      font-size: clamp(2.2rem, 5.5vw, 3.8rem); font-weight: 900;
+      line-height: 1.15; color: #F0F6FF; margin-bottom: 24px; letter-spacing: -0.03em;
     }
-    .hero h1 span { color: var(--primary); }
-    .hero p { max-width: 580px; font-size: 1.05rem; color: var(--text-muted); margin-bottom: 40px; }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #93C5FD 0%, #67E8F9 50%, #86EFAC 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p { max-width: 600px; font-size: 1.05rem; color: rgba(176,197,218,0.9); margin-bottom: 44px; line-height: 1.75; }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 72px; }
 
     .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; background: var(--primary); color: #fff;
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 15px 30px; background: var(--primary); color: #fff;
       border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem;
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 16px rgba(61,107,143,0.25);
+      box-shadow: 0 4px 20px rgba(61,107,143,0.4);
     }
-    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,107,143,0.30); }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; background: #fff; color: var(--primary);
-      border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem;
-      border: 1.5px solid var(--border); transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .btn-secondary:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(61,107,143,0.5); }
 
-    .hero-stats { display: flex; gap: 40px; margin-top: 60px; flex-wrap: wrap; justify-content: center; }
-    .stat { text-align: center; }
-    .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--primary); display: block; }
-    .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 15px 30px; background: rgba(255,255,255,0.08); color: #E0EAF4;
+      border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.95rem;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      transition: background 0.2s, transform 0.15s, border-color 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+
+    .hero-stats {
+      display: flex; gap: 0; flex-wrap: wrap; justify-content: center;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px; backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+    .stat {
+      text-align: center; padding: 24px 36px;
+      position: relative;
+    }
+    .stat:not(:last-child)::after {
+      content: ''; position: absolute; right: 0; top: 20%; bottom: 20%;
+      width: 1px; background: rgba(255,255,255,0.10);
+    }
+    .stat-number { font-size: 2rem; font-weight: 900; color: #93C5FD; display: block; letter-spacing: -0.03em; }
+    .stat-label { font-size: 0.78rem; color: rgba(176,197,218,0.7); font-weight: 500; margin-top: 4px; display: block; }
+
+    /* ── REVEAL ANIMATIONS ── */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
 
     /* ── SECTIONS ── */
-    section { padding: 96px 24px; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
+    section { padding: 100px 24px; }
+    .section-inner { max-width: 1140px; margin: 0 auto; }
     .section-label {
-      display: inline-block; font-size: 0.75rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.72rem; font-weight: 800;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 14px;
+    }
+    .section-label::before {
+      content: ''; display: block; width: 20px; height: 2px; background: var(--primary); border-radius: 1px;
     }
     .section-title {
-      font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800;
-      color: var(--text); margin-bottom: 16px; letter-spacing: -0.02em;
+      font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: 900;
+      color: var(--text); margin-bottom: 18px; letter-spacing: -0.03em;
     }
-    .section-desc { font-size: 1rem; color: var(--text-muted); max-width: 560px; margin-bottom: 56px; }
+    .section-desc { font-size: 1rem; color: var(--text-muted); max-width: 560px; margin-bottom: 60px; line-height: 1.75; }
 
-    /* ── VIDEO (portrait) ── */
-    .video-section { background: var(--text); padding: 80px 24px; }
+    /* ── VIDEO ── */
+    .video-section { background: #0d1b2a; padding: 100px 24px; }
     .video-section .section-label { color: #7FB5D9; }
-    .video-section .section-title { color: #fff; }
-    .video-section .section-desc { color: #8A9BAB; }
+    .video-section .section-label::before { background: #7FB5D9; }
+    .video-section .section-title { color: #F0F6FF; }
+    .video-section .section-desc { color: rgba(176,197,218,0.75); }
 
     .video-portrait-wrap {
-      /* 세로 영상 — 최대 폰 너비로 제한, 자연 비율 유지 */
-      max-width: 360px;
+      max-width: 340px;
       margin: 0 auto;
-      border-radius: 28px;
+      border-radius: 32px;
       overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
       background: #000;
+      position: relative;
+    }
+    /* phone-like notch top bar */
+    .video-portrait-wrap::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3D6B8F, #4A9B7F);
+      z-index: 1;
     }
     .video-portrait-wrap video { width: 100%; display: block; }
 
     /* ── FEATURES ── */
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .features-section { background: #fff; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 22px; }
     .feature-card {
-      background: var(--bg-card); border-radius: var(--radius); padding: 32px 28px;
-      border: 1px solid var(--border); box-shadow: var(--shadow);
-      transition: transform 0.2s, box-shadow 0.2s;
+      background: var(--bg); border-radius: var(--radius); padding: 36px 30px;
+      border: 1px solid var(--border);
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      position: relative; overflow: hidden;
     }
-    .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .feature-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: var(--radius);
+      opacity: 0; transition: opacity 0.3s;
+      background: linear-gradient(135deg, rgba(61,107,143,0.05), rgba(74,155,127,0.05));
+    }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(61,107,143,0.2); }
+    .feature-card:hover::before { opacity: 1; }
+
     .feature-icon {
-      width: 52px; height: 52px; border-radius: 14px;
+      width: 56px; height: 56px; border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; margin-bottom: 20px;
+      font-size: 1.5rem; margin-bottom: 22px;
     }
-    .feature-card h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-    .feature-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.7; }
+    .fi-blue { background: linear-gradient(135deg, rgba(61,107,143,0.15), rgba(91,141,184,0.08)); }
+    .fi-green { background: linear-gradient(135deg, rgba(74,155,127,0.15), rgba(74,155,127,0.08)); }
+    .fi-red { background: linear-gradient(135deg, rgba(224,90,90,0.15), rgba(224,90,90,0.08)); }
+    .fi-orange { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08)); }
+
+    .feature-card h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+    .feature-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.75; }
+
+    .feature-arrow {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-top: 18px;
+      opacity: 0; transform: translateX(-6px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .feature-card:hover .feature-arrow { opacity: 1; transform: translateX(0); }
 
     /* ── PIPELINE ── */
-    .pipeline-section { background: #fff; }
-    .pipeline-steps { display: flex; flex-direction: column; gap: 100px; }
+    .pipeline-section { background: var(--bg); }
+    .pipeline-steps { display: flex; flex-direction: column; gap: 120px; }
 
     .pipeline-step {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
+      position: relative;
     }
     .pipeline-step.reverse .step-visuals { order: -1; }
 
-    .step-number { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary-light); margin-bottom: 10px; }
-    .step-content h3 { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 14px; letter-spacing: -0.02em; }
-    .step-content p { font-size: 0.925rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 20px; }
+    .step-number-bg {
+      position: absolute; font-size: 12rem; font-weight: 900;
+      color: rgba(61,107,143,0.04); letter-spacing: -0.05em;
+      top: 50%; transform: translateY(-50%);
+      left: -20px; user-select: none; pointer-events: none; line-height: 1;
+    }
+    .pipeline-step.reverse .step-number-bg { left: auto; right: -20px; }
+
+    .step-number {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--primary-light); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .step-number::before {
+      content: ''; display: block; width: 28px; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 1px;
+    }
+    .step-content h3 { font-size: 1.6rem; font-weight: 900; color: var(--text); margin-bottom: 16px; letter-spacing: -0.03em; }
+    .step-content p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
 
     .step-tags { display: flex; flex-wrap: wrap; gap: 8px; }
     .tag {
-      padding: 5px 12px; background: rgba(61,107,143,0.08); color: var(--primary);
-      border-radius: 100px; font-size: 0.78rem; font-weight: 600;
+      padding: 6px 14px; background: rgba(61,107,143,0.08); color: var(--primary);
+      border-radius: 100px; font-size: 0.76rem; font-weight: 700;
       border: 1px solid rgba(61,107,143,0.15);
+      transition: background 0.2s, border-color 0.2s;
     }
+    .tag:hover { background: rgba(61,107,143,0.15); border-color: rgba(61,107,143,0.25); }
 
-    /* 이미지 컨테이너 — 자연 비율 그대로 */
     .img-card {
-      border-radius: 12px; overflow: hidden;
-      box-shadow: var(--shadow); background: var(--bg);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: var(--shadow-md); background: var(--bg);
+      transition: transform 0.25s, box-shadow 0.25s;
     }
+    .img-card:hover { transform: scale(1.02); box-shadow: var(--shadow-lg); }
     .img-card img { width: 100%; height: auto; display: block; }
     .img-label {
-      padding: 8px 12px; background: rgba(0,0,0,0.04);
-      font-size: 0.72rem; color: var(--text-muted); font-weight: 500; text-align: center;
+      padding: 10px 14px; background: rgba(0,0,0,0.03);
+      font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-align: center;
+      border-top: 1px solid var(--border);
     }
 
-    /* Step 01: 폰 스크린샷 2장 — stretch로 높이 맞춤, 미세 비율 차이 cover로 흡수 */
-    .step01-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      align-items: stretch;
-    }
+    .step01-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
     .step01-grid .img-card { display: flex; flex-direction: column; }
-    .step01-grid .img-card img {
-      width: 100%; flex: 1;
-      object-fit: cover; object-position: top center; display: block;
+    .step01-grid .img-card img { width: 100%; flex: 1; object-fit: cover; object-position: top center; }
+
+    .step02-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .step02-grid .img-card img { width: 100%; height: auto; }
+
+    .step03-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .step03-grid .img-card img { width: 100%; height: auto; }
+
+    /* ── GPU COMPARE SLIDER ── */
+    .gpu-section { background: #fff; padding: 100px 24px; }
+
+    .compare-wrapper {
+      max-width: 560px; margin: 0 auto;
+    }
+    .compare-slider {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+      cursor: ew-resize;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .compare-img-after { display: block; width: 100%; height: auto; }
+    .compare-before-wrap {
+      position: absolute; top: 0; left: 0; bottom: 0;
+      overflow: hidden;
+      width: 50%;
+    }
+    .compare-before-wrap img {
+      display: block; height: 100%; width: auto;
+      max-width: none;
+    }
+    .compare-handle {
+      position: absolute; top: 0; bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px; background: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
+    }
+    .compare-handle-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      font-size: 0.85rem; color: var(--text);
+      flex-shrink: 0;
+    }
+    .compare-label {
+      position: absolute; top: 14px;
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 800;
+      pointer-events: none;
+    }
+    .compare-label-before {
+      left: 14px; background: rgba(224,90,90,0.9); color: #fff;
+    }
+    .compare-label-after {
+      right: 14px; background: rgba(74,155,127,0.9); color: #fff;
+    }
+    .compare-range {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: ew-resize;
+      width: 100%; height: 100%;
+      -webkit-appearance: none; appearance: none;
+      margin: 0;
     }
 
-    /* Step 02: landscape 2장 나란히 — 자연 비율 */
-    .step02-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+    .compare-caption {
+      display: flex; justify-content: space-between;
+      margin-top: 16px; padding: 0 4px;
     }
-    .step02-grid .img-card img { width: 100%; height: auto; display: block; }
-
-    /* Step 03: 세로 폰 스크린샷 3장 나란히 — 자연 비율 */
-    .step03-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .step03-grid .img-card img { width: 100%; height: auto; display: block; }
-
-    /* ── GPU COMPARE ── */
-    .gpu-section { background: var(--bg); padding: 80px 24px; }
-    .gpu-compare { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-    .gpu-item { flex: 1; min-width: 200px; max-width: 260px; }
-    .gpu-item .img-card img { width: 100%; height: auto; display: block; }
-    .gpu-label { padding: 10px 14px; background: var(--bg-card); font-size: 0.82rem; font-weight: 600; text-align: center; }
-    .gpu-label.cpu { color: #E05A5A; }
-    .gpu-label.gpu { color: var(--accent); }
+    .caption-item { font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .caption-item.cpu { color: var(--accent-red); }
+    .caption-item.gpu { color: var(--accent); }
+    .caption-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .caption-dot.cpu { background: var(--accent-red); }
+    .caption-dot.gpu { background: var(--accent); }
 
     /* ── TECH STACK ── */
-    .tech-section { background: #fff; }
-    .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-    .tech-card { background: var(--bg); border-radius: 14px; padding: 24px 20px; border: 1px solid var(--border); }
-    .tech-card h4 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-bottom: 14px; }
-    .tech-pills { display: flex; flex-wrap: wrap; gap: 7px; }
-    .tech-pill { padding: 5px 11px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 0.78rem; font-weight: 500; color: var(--text); }
+    .tech-section { background: var(--bg); }
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+    .tech-card {
+      background: var(--bg-card); border-radius: 18px; padding: 28px 24px;
+      border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .tech-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .tech-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .tech-card-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .ti-ios { background: linear-gradient(135deg, #e8f0fb, #d0e3f7); }
+    .ti-backend { background: linear-gradient(135deg, #e8f5ef, #ccf0e2); }
+    .ti-ai { background: linear-gradient(135deg, #f5eaff, #e8d0ff); }
+    .ti-arch { background: linear-gradient(135deg, #fff5e8, #ffeacc); }
+    .tech-card h4 { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tech-pill {
+      padding: 5px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .tech-pill:hover { background: rgba(61,107,143,0.07); border-color: rgba(61,107,143,0.2); }
 
     /* ── TEAM ── */
-    .team-section { background: var(--bg); }
-    .team-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .team-section { background: #fff; }
+    .team-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
     .team-card {
-      background: var(--bg-card); border-radius: var(--radius); padding: 28px 24px;
-      border: 1px solid var(--border); box-shadow: var(--shadow);
-      text-align: center; min-width: 180px; flex: 1; max-width: 200px;
+      background: var(--bg); border-radius: 24px; padding: 36px 28px;
+      border: 1px solid var(--border);
+      text-align: center; width: 200px;
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative; overflow: hidden;
     }
+    .team-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+    }
+    .team-card.ios::before { background: linear-gradient(90deg, #3D6B8F, #5B8DB8); }
+    .team-card.backend::before { background: linear-gradient(90deg, #4A9B7F, #6BBD9F); }
+    .team-card.ai::before { background: linear-gradient(90deg, #8B5CF6, #A78BFA); }
+    .team-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
     .team-avatar {
-      width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      width: 68px; height: 68px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; margin: 0 auto 14px;
+      font-size: 1.6rem; margin: 0 auto 18px;
     }
-    .team-card h4 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .team-card p { font-size: 0.8rem; color: var(--text-muted); }
+    .team-card.ios .team-avatar { background: linear-gradient(135deg, #3D6B8F, #5B8DB8); }
+    .team-card.backend .team-avatar { background: linear-gradient(135deg, #4A9B7F, #6BBD9F); }
+    .team-card.ai .team-avatar { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
+
+    .team-card h4 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .team-role-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .team-card.ios .team-role-badge { background: rgba(61,107,143,0.1); color: var(--primary); }
+    .team-card.backend .team-role-badge { background: rgba(74,155,127,0.1); color: var(--accent); }
+    .team-card.ai .team-role-badge { background: rgba(139,92,246,0.1); color: #7C3AED; }
 
     /* ── FOOTER ── */
-    footer { background: var(--text); color: rgba(255,255,255,0.55); text-align: center; padding: 48px 24px; }
-    footer .footer-logo { margin-bottom: 8px; }
-    footer .footer-logo img { filter: brightness(0) invert(1); opacity: 0.9; }
-    footer p { font-size: 0.85rem; margin-bottom: 4px; }
-    footer a { color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.2s; }
-    footer a:hover { color: #fff; }
-    footer .footer-github { margin-top: 16px; }
-    footer .footer-copy { margin-top: 24px; font-size: 0.78rem; opacity: 0.4; }
+    footer {
+      background: #0d1b2a;
+      color: rgba(255,255,255,0.5);
+      padding: 60px 24px 40px;
+    }
+    .footer-inner {
+      max-width: 1140px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 32px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-logo { margin-bottom: 10px; }
+    .footer-logo img { filter: brightness(0) invert(1); opacity: 0.85; }
+    .footer-brand p { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin-top: 8px; }
+    .footer-links { display: flex; gap: 32px; }
+    .footer-links a { font-size: 0.875rem; color: rgba(255,255,255,0.55); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    .footer-links a:hover { color: #fff; }
+    .footer-copy {
+      max-width: 1140px; margin: 28px auto 0;
+      font-size: 0.78rem; opacity: 0.35; text-align: center;
+    }
 
-    /* section-inner centered variants */
+    /* ── DIVIDER ── */
+    .divider { width: 48px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 2px; margin-bottom: 40px; }
+
+    /* ── section-inner variants ── */
     .section-inner-center { text-align: center; }
-    .section-desc-center { margin: 0 auto 40px; }
-    .section-desc-center-lg { margin: 0 auto 48px; }
+    .section-desc-center { margin: 0 auto 48px; }
 
-    /* feature icon bg colors */
-    .fi-blue { background: rgba(61,107,143,0.10); }
-    .fi-green { background: rgba(74,155,127,0.10); }
-    .fi-red { background: rgba(224,90,90,0.10); }
-    .fi-orange { background: rgba(255,165,0,0.10); }
+    /* ── PROBLEM ── */
+    .problem-section { background: #fff; }
+    .problem-stat-banner {
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+      background: linear-gradient(135deg, #FFF5F5 0%, #FFF8F0 100%);
+      border: 1px solid rgba(224,90,90,0.15);
+      border-radius: 20px; padding: 28px 36px; margin-bottom: 52px;
+    }
+    .problem-stat-left { display: flex; align-items: baseline; gap: 10px; flex-shrink: 0; }
+    .pstat-from { font-size: 1.6rem; font-weight: 900; color: var(--accent-red); letter-spacing: -0.03em; }
+    .pstat-arrow { font-size: 1.4rem; color: var(--text-muted); }
+    .pstat-to { font-size: 1.6rem; font-weight: 900; color: var(--accent-red); letter-spacing: -0.03em; }
+    .problem-stat-right { flex: 1; }
+    .pstat-title { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .pstat-sub { font-size: 0.82rem; color: var(--text-muted); }
 
-    .divider { width: 48px; height: 4px; background: var(--primary); border-radius: 2px; margin-bottom: 32px; }
+    .problem-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .problem-card {
+      background: var(--bg); border-radius: 20px; padding: 32px 26px;
+      border: 1px solid var(--border);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .problem-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .problem-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(224,90,90,0.12), rgba(224,90,90,0.06));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 18px;
+    }
+    .problem-card h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .problem-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.75; }
+
+    /* ── PERFORMANCE ── */
+    .perf-section { background: var(--text); padding: 100px 24px; }
+    .perf-section .section-label { color: #7FB5D9; }
+    .perf-section .section-label::before { background: #7FB5D9; }
+    .perf-section .section-title { color: #F0F6FF; }
+    .perf-section .section-desc { color: rgba(176,197,218,0.75); }
+
+    .perf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .perf-item {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 28px 24px; text-align: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .perf-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(91,141,184,0.3); }
+    .perf-module {
+      display: inline-block; padding: 4px 12px; border-radius: 8px;
+      background: rgba(91,141,184,0.2); color: #93C5FD;
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .perf-name { font-size: 0.85rem; font-weight: 700; color: rgba(240,246,255,0.75); margin-bottom: 10px; }
+    .perf-time { font-size: 2rem; font-weight: 900; color: #F0F6FF; letter-spacing: -0.04em; margin-bottom: 12px; line-height: 1; }
+    .perf-item.highlight .perf-time { color: #86EFAC; }
+    .perf-note { font-size: 0.78rem; color: rgba(176,197,218,0.6); line-height: 1.6; }
+
+    /* ── VISION ── */
+    .vision-section { background: #0d1b2a; padding: 100px 24px; }
+    .vision-section .section-label { color: #7FB5D9; }
+    .vision-section .section-label::before { background: #7FB5D9; }
+    .vision-section .section-title { color: #F0F6FF; }
+    .vision-section .section-desc { color: rgba(176,197,218,0.75); }
+
+    .vision-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; margin: 0 auto; }
+    .vision-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 40px 36px; text-align: left;
+      transition: background 0.25s, border-color 0.25s, transform 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .vision-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #3D6B8F, #4A9B7F);
+    }
+    .vision-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(91,141,184,0.3); transform: translateY(-4px); }
+    .vision-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: rgba(91,141,184,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 20px;
+    }
+    .vision-card h3 { font-size: 1.15rem; font-weight: 800; color: #F0F6FF; margin-bottom: 14px; }
+    .vision-card p { font-size: 0.875rem; color: rgba(176,197,218,0.75); line-height: 1.8; margin-bottom: 20px; }
+    .vision-tag {
+      display: inline-flex; align-items: center;
+      padding: 5px 14px; border-radius: 100px;
+      background: rgba(91,141,184,0.15); color: #93C5FD;
+      font-size: 0.75rem; font-weight: 700;
+      border: 1px solid rgba(91,141,184,0.2);
+    }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .pipeline-step { grid-template-columns: 1fr; gap: 36px; }
+      .pipeline-step.reverse .step-visuals { order: 0; }
+      .step-number-bg { display: none; }
+    }
     @media (max-width: 768px) {
       nav { padding: 0 20px; }
       .nav-links li:not(:last-child) { display: none; }
-      .pipeline-step { grid-template-columns: 1fr; gap: 32px; }
-      .pipeline-step.reverse .step-visuals { order: 0; }
       .step01-grid { grid-template-columns: 1fr; }
-      .step01-phone { grid-row: auto; width: 100%; max-width: 200px; margin: 0 auto; }
       .step03-grid { grid-template-columns: 1fr 1fr; }
-      section { padding: 64px 20px; }
+      .problem-cards { grid-template-columns: 1fr; }
+      .perf-grid { grid-template-columns: 1fr 1fr; }
+      .vision-cards { grid-template-columns: 1fr; }
+      section { padding: 72px 20px; }
+      .stat { padding: 20px 24px; }
+      .stat-number { font-size: 1.6rem; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
     }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
+<nav id="main-nav">
   <a href="#" class="nav-logo">
     <img src="image/roomlog_logo.png" alt="RoomLog" height="28" />
   </a>
@@ -295,9 +631,7 @@
     <li><a href="#team">팀</a></li>
     <li>
       <a href="https://github.com/DGU-Team404" target="_blank" rel="noopener" class="nav-github">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
     </li>
@@ -306,39 +640,91 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">
-    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
-    동국대학교 · 캡스톤 디자인 · Team 404
-  </div>
-  <h1>방의 모든 순간을<br /><span>3D로 기록</span>하다</h1>
-  <p>iPhone LiDAR로 입주 시 방을 스캔하고, AI가 하자를 탐지·비교·견적까지 자동으로 처리합니다. 퇴거 분쟁, 이제 증거로 대응하세요.</p>
-  <div class="hero-actions">
-    <a href="https://github.com/DGU-Team404" target="_blank" rel="noopener" class="btn-primary">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-      </svg>
-      GitHub Organization
-    </a>
-    <a href="#demo" class="btn-secondary">
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      데모 영상 보기
-    </a>
-  </div>
-  <div class="hero-stats">
-    <div class="stat"><span class="stat-number">34</span><span class="stat-label">API 엔드포인트</span></div>
-    <div class="stat"><span class="stat-number">10</span><span class="stat-label">구현 모듈</span></div>
-    <div class="stat"><span class="stat-number">83</span><span class="stat-label">테스트 통과</span></div>
-    <div class="stat"><span class="stat-number">E2E</span><span class="stat-label">전체 검증 완료</span></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      동국대학교 · 캡스톤 디자인 · Team 404
+    </div>
+    <h1>방의 모든 순간을<br /><span class="gradient-text">3D로 기록</span>하다</h1>
+    <p>iPhone LiDAR로 입주 시 방을 스캔하고, AI가 하자를 탐지·비교·견적까지 자동으로 처리합니다.<br />퇴거 분쟁, 이제 증거로 대응하세요.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/DGU-Team404" target="_blank" rel="noopener" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub Organization
+      </a>
+      <a href="#demo" class="btn-secondary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        데모 영상 보기
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number" data-count="34">34</span>
+        <span class="stat-label">API 엔드포인트</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" data-count="10">10</span>
+        <span class="stat-label">구현 모듈</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" data-count="83">83</span>
+        <span class="stat-label">테스트 통과</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">E2E</span>
+        <span class="stat-label">전체 검증 완료</span>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- DEMO VIDEO (세로 영상) -->
+<!-- PROBLEM -->
+<section class="problem-section" id="problem">
+  <div class="section-inner">
+    <span class="section-label reveal">Problem</span>
+    <h2 class="section-title reveal">청년 임차인, 왜 항상 불리한가</h2>
+    <p class="section-desc reveal">20·30 사회 초년생은 법률 지식도, 전문 장비도, 협상 경험도 없습니다. 매년 반복되는 보증금 분쟁의 구조적 원인을 세 가지로 정리했습니다.</p>
+
+    <div class="problem-stat-banner reveal">
+      <div class="problem-stat-left">
+        <span class="pstat-from">3,818건</span>
+        <span class="pstat-arrow">→</span>
+        <span class="pstat-to">역대 최고치</span>
+      </div>
+      <div class="problem-stat-right">
+        <p class="pstat-title">공동주택 하자심사·분쟁조정 신청 건수</p>
+        <p class="pstat-sub">2018년 이후 지속 증가 · 2025년 사상 최다 전망 (국토안전관리원, KALIS)</p>
+      </div>
+    </div>
+
+    <div class="problem-cards">
+      <div class="problem-card reveal reveal-delay-1">
+        <div class="problem-icon">📷</div>
+        <h3>2D 사진의 한계</h3>
+        <p>촬영 각도·조명에 따라 결과가 달라지는 스마트폰 사진은 하자의 정확한 위치와 크기를 입증하기 어려워 법원에서 증거로 인정받지 못하는 경우가 많습니다.</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="problem-icon">⚖️</div>
+        <h3>법적 증거력 부족</h3>
+        <p>임차인은 입주 시 하자를 체계적으로 기록하는 방법을 모르고, 주택임대차보호법상 임차인의 원상복구 의무 범위와 자연 마모로 인한 손상의 구분도 명확히 알지 못합니다.</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-3">
+        <div class="problem-icon">💰</div>
+        <h3>수리비 정보 비대칭</h3>
+        <p>하자 유형별·면적별 평균 수리단가 정보가 일반 소비자에게 공개되지 않아, 임대인이 제시한 수리비가 적정한지 판단할 근거가 없어 그대로 수용하게 됩니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO VIDEO -->
 <section class="video-section" id="demo">
   <div class="section-inner section-inner-center">
-    <span class="section-label">Demo</span>
-    <h2 class="section-title">실제 동작 영상</h2>
-    <p class="section-desc section-desc-center">스캔부터 하자 탐지, 견적 조회까지 전체 플로우를 직접 확인하세요.</p>
-    <div class="video-portrait-wrap">
+    <span class="section-label reveal">Demo</span>
+    <h2 class="section-title reveal">실제 동작 영상</h2>
+    <p class="section-desc section-desc-center reveal">스캔부터 하자 탐지, 견적 조회까지 전체 플로우를 직접 확인하세요.</p>
+    <div class="video-portrait-wrap reveal">
       <video controls preload="metadata">
         <source src="video/demo.mp4" type="video/mp4" />
       </video>
@@ -347,31 +733,35 @@
 </section>
 
 <!-- FEATURES -->
-<section id="features">
+<section class="features-section" id="features">
   <div class="section-inner">
-    <span class="section-label">Features</span>
-    <h2 class="section-title">4가지 핵심 기능</h2>
-    <p class="section-desc">기록 → 비교 → 비용 산정 → 업체 매칭까지, 임차인에게 필요한 모든 것을 하나로.</p>
+    <span class="section-label reveal">Features</span>
+    <h2 class="section-title reveal">4가지 핵심 기능</h2>
+    <p class="section-desc reveal">기록 → 비교 → 비용 산정 → 업체 매칭까지, 임차인에게 필요한 모든 것을 하나로.</p>
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-1">
         <div class="feature-icon fi-blue">📱</div>
         <h3>3D 스캔 · 복원</h3>
         <p>iPhone · iPad LiDAR로 방 전체를 스캔. Open3D TSDF Fusion으로 고해상도 3D 메시를 자동 생성합니다.</p>
+        <div class="feature-arrow">자세히 보기 →</div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-2">
         <div class="feature-icon fi-green">🔍</div>
         <h3>AI 하자 탐지</h3>
         <p>GPT Vision으로 하자 유형·심각도·위치를 탐지하고, SAM 3로 픽셀 단위 마스크를 추출합니다.</p>
+        <div class="feature-arrow">자세히 보기 →</div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-3">
         <div class="feature-icon fi-red">⚖️</div>
         <h3>입주 · 퇴거 비교</h3>
         <p>두 스캔의 하자 3D 중심점을 비교해 퇴거 시 새로 생긴 하자만 정확하게 분류합니다.</p>
+        <div class="feature-arrow">자세히 보기 →</div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-4">
         <div class="feature-icon fi-orange">🏪</div>
         <h3>견적 + 업체 매칭</h3>
         <p>조달청 표준단가 기반 수리비 자동 산출, Kakao Map으로 주변 수리 업체를 연결합니다.</p>
+        <div class="feature-arrow">자세히 보기 →</div>
       </div>
     </div>
   </div>
@@ -380,14 +770,15 @@
 <!-- PIPELINE -->
 <section class="pipeline-section" id="pipeline">
   <div class="section-inner">
-    <span class="section-label">How It Works</span>
-    <h2 class="section-title">기술 파이프라인</h2>
-    <p class="section-desc">ARKit LiDAR 원시 데이터부터 견적 리포트까지, 세 단계로 이어집니다.</p>
+    <span class="section-label reveal">How It Works</span>
+    <h2 class="section-title reveal">기술 파이프라인</h2>
+    <p class="section-desc reveal">ARKit LiDAR 원시 데이터부터 견적 리포트까지, 세 단계로 이어집니다.</p>
 
     <div class="pipeline-steps">
 
       <!-- STEP 01 -->
-      <div class="pipeline-step">
+      <div class="pipeline-step reveal">
+        <div class="step-number-bg">01</div>
         <div class="step-content">
           <div class="step-number">Step 01</div>
           <h3>LiDAR 스캔 &amp; 3D 복원</h3>
@@ -415,7 +806,8 @@
       </div>
 
       <!-- STEP 02 -->
-      <div class="pipeline-step reverse">
+      <div class="pipeline-step reverse reveal">
+        <div class="step-number-bg">02</div>
         <div class="step-content">
           <div class="step-number">Step 02</div>
           <h3>AI 하자 탐지 · 3D 매핑</h3>
@@ -442,7 +834,8 @@
       </div>
 
       <!-- STEP 03 -->
-      <div class="pipeline-step">
+      <div class="pipeline-step reveal">
+        <div class="step-number-bg">03</div>
         <div class="step-content">
           <div class="step-number">Step 03</div>
           <h3>입주 · 퇴거 비교 &amp; 견적</h3>
@@ -455,7 +848,6 @@
           </div>
         </div>
         <div class="step-visuals">
-          <!-- 세 폰 스크린샷: 모두 세로 portrait (비율 ~1:2) -->
           <div class="step03-grid">
             <div class="img-card">
               <img src="image/compare.png" alt="비교 결과" />
@@ -480,22 +872,61 @@
 <!-- GPU COMPARISON -->
 <section class="gpu-section">
   <div class="section-inner section-inner-center">
-    <span class="section-label">한계점 · 개선 방향</span>
-    <h2 class="section-title">CPU vs GPU 3D 복원 품질</h2>
-    <p class="section-desc section-desc-center-lg">시간·비용 제약으로 현재는 CPU 환경에서 처리 중입니다. 동일 파이프라인을 GPU에서 구동하면 메시 품질이 크게 향상됩니다.</p>
-    <div class="gpu-compare">
-      <div class="gpu-item">
-        <div class="img-card">
-          <!-- portrait 폰 스크린샷 (.png) 사용 -->
-          <img src="image/no_gpu.png" alt="CPU 결과" />
-          <div class="img-label gpu-label cpu">⚠ CPU — 노이즈 포함</div>
+    <span class="section-label reveal">한계점 · 개선 방향</span>
+    <h2 class="section-title reveal">CPU vs GPU 3D 복원 품질</h2>
+    <p class="section-desc section-desc-center reveal">시간·비용 제약으로 현재는 CPU 환경에서 처리 중입니다. 슬라이더를 드래그해 GPU 환경과 직접 비교해 보세요.</p>
+
+    <div class="compare-wrapper reveal">
+      <div class="compare-slider" id="compare-slider">
+        <img class="compare-img-after" src="image/with_gpu.png" alt="GPU 결과" id="compare-after">
+        <div class="compare-before-wrap" id="compare-before-wrap">
+          <img src="image/no_gpu.png" alt="CPU 결과" id="compare-before-img">
         </div>
+        <div class="compare-label compare-label-before">⚠ CPU</div>
+        <div class="compare-label compare-label-after">✓ GPU</div>
+        <div class="compare-handle" id="compare-handle">
+          <div class="compare-handle-btn">⟺</div>
+        </div>
+        <input type="range" class="compare-range" id="compare-range" min="0" max="100" value="50">
       </div>
-      <div class="gpu-item">
-        <div class="img-card">
-          <img src="image/with_gpu.png" alt="GPU 결과" />
-          <div class="img-label gpu-label gpu">✓ GPU — 고품질 복원</div>
-        </div>
+      <div class="compare-caption">
+        <div class="caption-item cpu"><div class="caption-dot cpu"></div>CPU — 노이즈 포함</div>
+        <div class="caption-item gpu"><div class="caption-dot gpu"></div>GPU — 고품질 복원</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERFORMANCE -->
+<section class="perf-section">
+  <div class="section-inner">
+    <span class="section-label reveal">Performance</span>
+    <h2 class="section-title reveal">파이프라인 처리 성능</h2>
+    <p class="section-desc reveal">비실시간 특성에 맞게 설계된 비동기 파이프라인으로 사용자 대기 부담을 최소화합니다.</p>
+    <div class="perf-grid">
+      <div class="perf-item reveal reveal-delay-1">
+        <div class="perf-module">R01</div>
+        <div class="perf-name">3D 복원</div>
+        <div class="perf-time">1–3분</div>
+        <p class="perf-note">TSDF 볼륨 통합 + Marching Cubes 메시 추출 + gpt-image-1 썸네일 생성</p>
+      </div>
+      <div class="perf-item reveal reveal-delay-2">
+        <div class="perf-module">D01</div>
+        <div class="perf-name">하자 탐지</div>
+        <div class="perf-time">2–4분</div>
+        <p class="perf-note">GPT Vision 최대 20프레임 분석 + SAM 3 픽셀 단위 세그멘테이션 + 3D 역투영</p>
+      </div>
+      <div class="perf-item highlight reveal reveal-delay-3">
+        <div class="perf-module">D02</div>
+        <div class="perf-name">입·퇴거 비교</div>
+        <div class="perf-time">&lt;5초</div>
+        <p class="perf-note">캐시 결과 재활용 시 · asyncio.gather 병렬 처리로 재분석 시에도 D01 × 1 수준</p>
+      </div>
+      <div class="perf-item reveal reveal-delay-4">
+        <div class="perf-module">API</div>
+        <div class="perf-name">백엔드 응답</div>
+        <div class="perf-time">&lt;300ms</div>
+        <p class="perf-note">34개 엔드포인트 평균 · Fire-and-Callback 패턴으로 AI 추론과 HTTP 분리</p>
       </div>
     </div>
   </div>
@@ -504,12 +935,15 @@
 <!-- TECH STACK -->
 <section class="tech-section">
   <div class="section-inner">
-    <span class="section-label">Tech Stack</span>
-    <h2 class="section-title">기술 스택</h2>
+    <span class="section-label reveal">Tech Stack</span>
+    <h2 class="section-title reveal">기술 스택</h2>
     <div class="divider"></div>
     <div class="tech-grid">
-      <div class="tech-card">
-        <h4>iOS</h4>
+      <div class="tech-card reveal reveal-delay-1">
+        <div class="tech-card-header">
+          <div class="tech-card-icon ti-ios">📱</div>
+          <h4>iOS</h4>
+        </div>
         <div class="tech-pills">
           <span class="tech-pill">SwiftUI</span>
           <span class="tech-pill">ARKit LiDAR</span>
@@ -518,8 +952,11 @@
           <span class="tech-pill">KakaoMapsSDK</span>
         </div>
       </div>
-      <div class="tech-card">
-        <h4>Backend</h4>
+      <div class="tech-card reveal reveal-delay-2">
+        <div class="tech-card-header">
+          <div class="tech-card-icon ti-backend">⚙️</div>
+          <h4>Backend</h4>
+        </div>
         <div class="tech-pills">
           <span class="tech-pill">Spring Boot 3</span>
           <span class="tech-pill">MySQL</span>
@@ -528,8 +965,11 @@
           <span class="tech-pill">Cloudflare R2</span>
         </div>
       </div>
-      <div class="tech-card">
-        <h4>AI</h4>
+      <div class="tech-card reveal reveal-delay-3">
+        <div class="tech-card-header">
+          <div class="tech-card-icon ti-ai">🤖</div>
+          <h4>AI</h4>
+        </div>
         <div class="tech-pills">
           <span class="tech-pill">FastAPI</span>
           <span class="tech-pill">Open3D TSDF</span>
@@ -539,8 +979,11 @@
           <span class="tech-pill">AWS S3</span>
         </div>
       </div>
-      <div class="tech-card">
-        <h4>Architecture</h4>
+      <div class="tech-card reveal reveal-delay-4">
+        <div class="tech-card-header">
+          <div class="tech-card-icon ti-arch">🏗️</div>
+          <h4>Architecture</h4>
+        </div>
         <div class="tech-pills">
           <span class="tech-pill">Fire-and-Callback</span>
           <span class="tech-pill">JWT + API Key</span>
@@ -555,29 +998,52 @@
 <!-- TEAM -->
 <section class="team-section" id="team">
   <div class="section-inner section-inner-center">
-    <span class="section-label">Team</span>
-    <h2 class="section-title">Team 404</h2>
-    <p class="section-desc section-desc-center-lg">동국대학교 캡스톤 디자인 · 2026</p>
+    <span class="section-label reveal">Team</span>
+    <h2 class="section-title reveal">Team 404</h2>
+    <p class="section-desc section-desc-center reveal">동국대학교 캡스톤 디자인 · 2026</p>
     <div class="team-grid">
-      <div class="team-card">
+      <div class="team-card ios reveal reveal-delay-1">
         <div class="team-avatar">👩‍💻</div>
         <h4>김도연</h4>
-        <p>iOS</p>
+        <div class="team-role-badge">iOS</div>
       </div>
-      <div class="team-card">
+      <div class="team-card backend reveal reveal-delay-2">
         <div class="team-avatar">👩‍💻</div>
         <h4>김민지</h4>
-        <p>Backend</p>
+        <div class="team-role-badge">Backend</div>
       </div>
-      <div class="team-card">
+      <div class="team-card ai reveal reveal-delay-3">
         <div class="team-avatar">👨‍💻</div>
         <h4>김용빈</h4>
-        <p>AI</p>
+        <div class="team-role-badge">AI</div>
       </div>
-      <div class="team-card">
+      <div class="team-card ios reveal reveal-delay-4">
         <div class="team-avatar">👨‍💻</div>
         <h4>송민교</h4>
-        <p>iOS</p>
+        <div class="team-role-badge">iOS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VISION -->
+<section class="vision-section">
+  <div class="section-inner section-inner-center">
+    <span class="section-label reveal">Future Vision</span>
+    <h2 class="section-title reveal" style="color:#F0F6FF">향후 비전</h2>
+    <p class="section-desc section-desc-center reveal" style="color:rgba(176,197,218,0.75)">RoomLog는 단순 스캔 앱을 넘어, 주거 이력 전체를 디지털 자산으로 관리하는 플랫폼으로 확장됩니다.</p>
+    <div class="vision-cards">
+      <div class="vision-card reveal reveal-delay-1">
+        <div class="vision-icon">🏢</div>
+        <h3>PropTech 플랫폼 통합</h3>
+        <p>직방·다방 등 부동산 플랫폼과 연동해 입주 시 임대인·임차인이 함께 방을 스캔하고 <strong style="color:#93C5FD">디지털 입주 확인서</strong>를 발급합니다. 퇴거 시 3D 데이터를 자동 비교해 보증금 반환 분쟁을 사전에 차단하는 B2B2C 서비스로 발전합니다. 연간 3,000건 이상의 분쟁 감소에 기여할 수 있습니다.</p>
+        <div class="vision-tag">B2B2C · 디지털 입주 확인서</div>
+      </div>
+      <div class="vision-card reveal reveal-delay-2">
+        <div class="vision-icon">🏠</div>
+        <h3>스마트홈 데이터 아카이브</h3>
+        <p>이사할 때마다 방 상태를 3D로 기록해 <strong style="color:#93C5FD">개인 주거 이력</strong>을 쌓습니다. 하자 발생 패턴 분석, 이사·보증금 정산 지원 등 다양한 주거 관리 서비스와 연동되어 단순 기록을 넘어 생애 전체 거주 데이터를 자산화합니다.</p>
+        <div class="vision-tag">개인 주거 아카이브 · 데이터 자산화</div>
       </div>
     </div>
   </div>
@@ -585,15 +1051,112 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">
-    <img src="image/roomlog_logo.png" alt="RoomLog" height="32" />
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <img src="image/roomlog_logo.png" alt="RoomLog" height="30" />
+      </div>
+      <p>LiDAR 기반 주거 공간 기록 · 하자 분쟁 해결 플랫폼</p>
+    </div>
+    <nav class="footer-links">
+      <a href="#features">기능</a>
+      <a href="#pipeline">기술</a>
+      <a href="#demo">데모</a>
+      <a href="#team">팀</a>
+      <a href="https://github.com/DGU-Team404" target="_blank" rel="noopener">GitHub</a>
+    </nav>
   </div>
-  <p>LiDAR 기반 주거 공간 기록 · 하자 분쟁 해결 플랫폼</p>
-  <p class="footer-github">
-    <a href="https://github.com/DGU-Team404" target="_blank" rel="noopener">github.com/DGU-Team404</a>
-  </p>
-  <p class="footer-copy">© 2026 Team 404 · Dongguk University</p>
+  <p class="footer-copy">© 2026 Team 404 · Dongguk University · Capstone Design</p>
 </footer>
+
+<script>
+  // Nav shadow on scroll
+  const nav = document.getElementById('main-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Animated counters
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target)) return;
+    const duration = 1200;
+    const start = performance.now();
+    function step(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(ease * target);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-number[data-count]').forEach(el => counterObserver.observe(el));
+
+  // Before/After GPU comparison slider
+  const slider = document.getElementById('compare-slider');
+  const range = document.getElementById('compare-range');
+  const beforeWrap = document.getElementById('compare-before-wrap');
+  const beforeImg = document.getElementById('compare-before-img');
+  const handle = document.getElementById('compare-handle');
+  const afterImg = document.getElementById('compare-after');
+
+  function updateSlider(val) {
+    beforeWrap.style.width = val + '%';
+    handle.style.left = val + '%';
+  }
+
+  function syncBeforeImgWidth() {
+    if (afterImg.naturalWidth > 0) {
+      beforeImg.style.width = slider.offsetWidth + 'px';
+    }
+  }
+
+  range.addEventListener('input', (e) => updateSlider(e.target.value));
+
+  afterImg.addEventListener('load', syncBeforeImgWidth);
+  window.addEventListener('resize', syncBeforeImgWidth, { passive: true });
+
+  // init after layout
+  requestAnimationFrame(() => {
+    syncBeforeImgWidth();
+    updateSlider(50);
+  });
+
+  // touch/mouse drag on slider itself
+  let dragging = false;
+  function getPercent(e) {
+    const rect = slider.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  }
+  slider.addEventListener('mousedown', (e) => { dragging = true; const p = getPercent(e); updateSlider(p); range.value = p; });
+  window.addEventListener('mousemove', (e) => { if (!dragging) return; const p = getPercent(e); updateSlider(p); range.value = p; });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  slider.addEventListener('touchstart', (e) => { const p = getPercent(e); updateSlider(p); range.value = p; }, { passive: true });
+  slider.addEventListener('touchmove', (e) => { const p = getPercent(e); updateSlider(p); range.value = p; }, { passive: true });
+</script>
 
 </body>
 </html>
